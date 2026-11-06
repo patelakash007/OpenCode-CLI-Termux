@@ -89,7 +89,7 @@ def patch_opentui(opentui_root):
     target: std.Build.ResolvedTarget,
 ) void {
     const is_android = target.result.abi.isAndroid();
-    const ndk_path = std.process.getEnvVarOwned(b.allocator, "ANDROID_NDK_HOME") catch null;
+    const ndk_path = b.graph.env_map.get("ANDROID_NDK_HOME");
     const ndk_sysroot = if (ndk_path) |ndk|
         b.pathJoin(&.{ ndk, "toolchains/llvm/prebuilt/linux-x86_64/sysroot" })
     else
@@ -148,7 +148,7 @@ def patch_opentui(opentui_root):
     target: std.Build.ResolvedTarget,
 ) void {
     const is_android = target.result.abi.isAndroid();
-    const ndk_path = std.process.getEnvVarOwned(b.allocator, "ANDROID_NDK_HOME") catch null;
+    const ndk_path = b.graph.env_map.get("ANDROID_NDK_HOME");
     const ndk_sysroot = if (ndk_path) |ndk|
         b.pathJoin(&.{ ndk, "toolchains/llvm/prebuilt/linux-x86_64/sysroot" })
     else
@@ -191,7 +191,7 @@ def patch_opentui(opentui_root):
         .pic = true,
     });
     if (target.result.abi.isAndroid()) {
-        const ndk_path = std.process.getEnvVarOwned(b.allocator, "ANDROID_NDK_HOME") catch null;
+        const ndk_path = b.graph.env_map.get("ANDROID_NDK_HOME");
         if (ndk_path) |ndk| {
             const sysroot = b.pathJoin(&.{ ndk, "toolchains/llvm/prebuilt/linux-x86_64/sysroot" });
             module.addSystemIncludePath(.{ .cwd_relative = b.pathJoin(&.{ sysroot, "usr/include" }) });
@@ -219,7 +219,7 @@ def patch_opentui(opentui_root):
         .optimize = optimize,
     });
     if (module_target.result.abi.isAndroid()) {
-        const ndk_path = std.process.getEnvVarOwned(b.allocator, "ANDROID_NDK_HOME") catch null;
+        const ndk_path = b.graph.env_map.get("ANDROID_NDK_HOME");
         if (ndk_path) |ndk| {
             const sysroot = b.pathJoin(&.{ ndk, "toolchains/llvm/prebuilt/linux-x86_64/sysroot" });
             opentui_module.addSystemIncludePath(.{ .cwd_relative = b.pathJoin(&.{ sysroot, "usr/include" }) });
