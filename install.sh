@@ -61,7 +61,7 @@ fi
 
 # Fallback URL if GitHub API rate-limited or fails
 if [ -z "$DEB_URL" ]; then
-    DEB_URL="https://github.com/$REPO/releases/latest/download/opencode_2.2.5_aarch64.deb"
+    DEB_URL="https://github.com/$REPO/releases/latest/download/opencode_1.0.0_aarch64.deb"
 fi
 
 echo -e "Target package: ${BOLD}$DEB_URL${NC}"

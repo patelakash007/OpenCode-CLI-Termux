@@ -4,7 +4,7 @@ set -e
 ROOT_DIR="$(cd "$(dirname "$0")/../../../.." && pwd)"
 DIST="$ROOT_DIR/dist-termux"
 OUT="$ROOT_DIR/release-artifacts"
-VERSION="2.2.5"
+VERSION="${OPENCODE_VERSION:-1.0.0}"
 
 echo "=== Assembling Termux Package Structure ==="
 rm -rf "$DIST" "$OUT"

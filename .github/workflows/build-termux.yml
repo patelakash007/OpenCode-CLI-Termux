@@ -12,6 +12,10 @@ on:
         required: false
         type: string
 
+env:
+  OPENCODE_VERSION: 1.0.0
+  OPENCODE_CHANNEL: latest
+
 permissions:
   contents: write
 
