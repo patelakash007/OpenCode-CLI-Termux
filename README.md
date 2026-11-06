@@ -86,9 +86,10 @@ All heavy builds and cross-compilations are performed via GitHub Actions CI/CD i
 
 ---
 
-## Technical notes (Bionic Libc Fixes)
+## Technical notes & Engineering Chronicle
 
-Running OpenCode natively on Android required solving four core compatibility hurdles:
+Running OpenCode natively on Android required solving four core compatibility hurdles. For the complete technical post-mortem, problem-retry-fix matrix, and architectural case study, see **[PORTING_CHRONICLE.md](PORTING_CHRONICLE.md)**.
+
 1. **`pthread_tryjoin_np` Stub**: Android Bionic does not export `pthread_tryjoin_np` in its C library. A static stub is embedded directly into `libopentui.so` so that dynamic loading via `node:ffi` succeeds without needing any `LD_PRELOAD` shims.
 2. **`libpthread` Bypass**: Linux glibc links separate `libpthread.so` and `libdl.so`. On Android Bionic, all threading and dynamic linking primitives reside in `libc.so`. The build script skips linking `-lpthread` on Android targets.
 3. **NDK `<limits.h>` Isolation**: Prevents host Linux glibc headers from leaking into Android compilation during Zig and Clang builds.
