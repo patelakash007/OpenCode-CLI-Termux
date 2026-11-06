@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "opencode",
-  "description": "AI-powered development tool",
-  "version": "2.2.5",
+  "name": "opencode-cli-termux",
+  "description": "Native OpenCode CLI for Android Termux (Bionic libc, ARM64, no PRoot)",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "packageManager": "bun@1.4.4",
@@ -125,7 +125,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/anomalyco/opencode"
+    "url": "https://github.com/patelakash007/OpenCode-CLI-Termux"
   },
   "license": "MIT",
   "prettier": {

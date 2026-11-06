@@ -1,13 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@opencode/codemode",
-  "version": "2.2.5",
+  "version": "1.0.0",
   "description": "Effect-native confined code execution over schema-described tools",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/anomalyco/opencode.git",
+    "url": "git+https://github.com/patelakash007/OpenCode-CLI-Termux.git",
     "directory": "packages/codemode"
   },
   "publishConfig": {

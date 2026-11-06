@@ -1,114 +1,103 @@
-<p align="center">
-  <a href="https://opencode.ai">
-    <picture>
-      <source srcset="packages/console/app/src/asset/logo-ornate-dark.svg" media="(prefers-color-scheme: dark)">
-      <source srcset="packages/console/app/src/asset/logo-ornate-light.svg" media="(prefers-color-scheme: light)">
-      <img src="packages/console/app/src/asset/logo-ornate-light.svg" alt="OpenCode logo">
-    </picture>
-  </a>
-</p>
-<p align="center">The open source AI coding agent.</p>
-<p align="center">
-  <a href="https://opencode.ai/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
-  <a href="https://www.npmjs.com/package/@opencode/cli"><img alt="npm" src="https://img.shields.io/npm/v/@opencode/cli?style=flat-square" /></a>
-  <a href="https://github.com/anomalyco/opencode/actions/workflows/release.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/release.yml?style=flat-square&branch=dev" /></a>
-</p>
+# OpenCode-CLI-Termux v1.0.0
 
-<p align="center">
-  <a href="README.md">English</a> |
-  <a href="README.zh.md">简体中文</a> |
-  <a href="README.zht.md">繁體中文</a> |
-  <a href="README.ko.md">한국어</a> |
-  <a href="README.de.md">Deutsch</a> |
-  <a href="README.es.md">Español</a> |
-  <a href="README.fr.md">Français</a> |
-  <a href="README.it.md">Italiano</a> |
-  <a href="README.da.md">Dansk</a> |
-  <a href="README.ja.md">日本語</a> |
-  <a href="README.pl.md">Polski</a> |
-  <a href="README.ru.md">Русский</a> |
-  <a href="README.bs.md">Bosanski</a> |
-  <a href="README.ar.md">العربية</a> |
-  <a href="README.no.md">Norsk</a> |
-  <a href="README.br.md">Português (Brasil)</a> |
-  <a href="README.th.md">ไทย</a> |
-  <a href="README.tr.md">Türkçe</a> |
-  <a href="README.uk.md">Українська</a> |
-  <a href="README.bn.md">বাংলা</a> |
-  <a href="README.gr.md">Ελληνικά</a> |
-  <a href="README.vi.md">Tiếng Việt</a>
-</p>
-
-[![OpenCode Terminal UI](packages/web/src/assets/lander/screenshot.png)](https://opencode.ai)
+> **Native OpenCode CLI for Android Termux · Bionic libc · ARM64 · No PRoot · No glibc**
 
 ---
 
-### Installation
+## What this is
 
-```bash
-# YOLO
-curl -fsSL https://opencode.ai/v2/install | bash
-
-# Package managers
-npm i -g @opencode/cli@latest      # or bun/pnpm/yarn
-brew install anomalyco/tap/opencode-v2 # macOS and Linux (recommended, always up to date)
-brew install opencode              # macOS and Linux (official brew formula, updated less)
-sudo pacman -S opencode            # Arch Linux (Stable)
-paru -S opencode-beta              # Arch Linux (Latest from AUR)
-mise use -g opencode               # Any OS
-nix run github:anomalyco/opencode  # Nix
-```
-
-> [!TIP]
-> Remove versions older than 0.1.x before installing.
-
-### Desktop App (BETA)
-
-OpenCode is also available as a desktop application. Download it from [opencode.ai/download](https://opencode.ai/download).
-
-| Platform              | Download                           |
-| --------------------- | ---------------------------------- |
-| macOS (Apple Silicon) | `opencode-desktop-mac-arm64.dmg`   |
-| macOS (Intel)         | `opencode-desktop-mac-x64.dmg`     |
-| Windows               | `opencode-desktop-win-x64.exe`     |
-| Linux                 | `.deb`, `.rpm`, or `.AppImage`     |
-
-```bash
-# macOS (Homebrew)
-brew install --cask opencode-desktop
-```
-
-#### Installation Directory
-
-The install script installs OpenCode to `$HOME/.opencode/bin`.
-
-### Agents
-
-OpenCode includes two built-in agents you can switch between with the `Tab` key.
-
-- **build** - Default, full-access agent for development work
-- **plan** - Read-only agent for analysis and code exploration
-  - Denies file edits by default
-  - Asks permission before running bash commands
-  - Ideal for exploring unfamiliar codebases or planning changes
-
-Also included is a **general** subagent for complex searches and multistep tasks.
-This is used internally and can be invoked using `@general` in messages.
-
-Learn more about [agents](https://opencode.ai/v2/docs/agents).
-
-### Documentation
-
-For more info on how to configure OpenCode, [**head over to our docs**](https://opencode.ai/v2/docs).
-
-### Contributing
-
-If you're interested in contributing to OpenCode, please read our [contributing docs](./CONTRIBUTING.md) before submitting a pull request.
-
-### Building on OpenCode
-
-If you are working on a project that's related to OpenCode and is using "opencode" as part of its name, for example "opencode-dashboard" or "opencode-mobile", please add a note to your README to clarify that it is not built by the OpenCode team and is not affiliated with us in any way.
+**OpenCode-CLI-Termux** is a lean, CLI-only fork of OpenCode specifically ported and optimized to run natively on Android Termux. It installs as a genuine Debian package (`.deb`) or standalone tarball, running directly on Android's native **Bionic libc** without needing PRoot, Ubuntu chroots, or glibc emulation layers.
 
 ---
 
-**Join our community** [Discord](https://discord.gg/opencode) | [X.com](https://x.com/opencode)
+## Requirements
+
+- **Device**: Android 64-bit ARM (`aarch64`)
+- **Environment**: Termux
+- **Runtime**: Node.js 26+ (`pkg install nodejs`)
+
+---
+
+## Install
+
+Download the latest release assets from [Releases](https://github.com/patelakash007/OpenCode-CLI-Termux/releases):
+
+### Option A: Install via Debian Package (Recommended)
+```bash
+dpkg -i opencode_2.2.5_aarch64.deb
+```
+
+### Option B: Standalone Tarball
+```bash
+tar -xzf opencode-termux-aarch64.tar.gz
+cd opencode-termux-aarch64
+bash install.sh
+```
+
+---
+
+## Quick start
+
+```bash
+# Authenticate with your model provider
+opencode auth
+
+# Launch the interactive terminal UI
+opencode
+
+# View your coding stats and terminal activity heatmap
+opencode stats
+
+# Run a non-interactive coding prompt
+opencode run 'Explain this codebase'
+```
+
+---
+
+## What was stripped
+
+To keep your Android device lightweight and responsive, all non-CLI bloat has been stripped from this fork:
+- **14 non-CLI packages removed**: Electron desktop client (`packages/desktop`), SolidJS Web PWA (`packages/app`, `packages/web`), management console (`packages/console`), stats dashboard (`packages/stats`), storybook, session-ui, Figma plugins, SDK, etc.
+- **6 non-CLI root directories removed**: `services/` (cloud backend), `salesforce/`, `infra/`, `nix/`, `sdks/`, and `specs/`.
+- **23 upstream workflows removed**: Kept only the dedicated native cross-compilation pipeline.
+- **Disk size impact**: Source tree reduced from **~220 MB down to 70 MB** (over 6,000 files and 1,000,000+ lines removed).
+
+---
+
+## How it's built
+
+All heavy builds and cross-compilations are performed via GitHub Actions CI/CD in [`.github/workflows/build-termux.yml`](.github/workflows/build-termux.yml):
+- **Android NDK r27**: C/C++ sysroot & toolchain for `aarch64-linux-android24`.
+- **Zig 0.17.0**: Compiles `libopentui.so` targeting `aarch64-linux-android.24`.
+- **Rust 1.90.0**: Cross-compiles `opencode-pty` session daemon for `aarch64-linux-android`.
+- **Node.js 26 + `node:ffi`**: Loads native FFI bindings dynamically on device.
+
+---
+
+## Technical notes (Bionic Libc Fixes)
+
+Running OpenCode natively on Android required solving four core compatibility hurdles:
+1. **`pthread_tryjoin_np` Stub**: Android Bionic does not export `pthread_tryjoin_np` in its C library. A static stub is embedded directly into `libopentui.so` so that dynamic loading via `node:ffi` succeeds without needing any `LD_PRELOAD` shims.
+2. **`libpthread` Bypass**: Linux glibc links separate `libpthread.so` and `libdl.so`. On Android Bionic, all threading and dynamic linking primitives reside in `libc.so`. The build script skips linking `-lpthread` on Android targets.
+3. **NDK `<limits.h>` Isolation**: Prevents host Linux glibc headers from leaking into Android compilation during Zig and Clang builds.
+4. **Target Triple `aarch64-linux-android.24`**: Pins Android API level 24 (Android 7.0+) to guarantee maximum ABI stability on modern Termux installations.
+
+---
+
+## Version history
+
+- **v1.0.0**: First standalone release. Native Bionic ARM64 build. CLI-only stripped fork. Working TUI, stats, auth, run.
+
+---
+
+## Credits
+
+- Based on the upstream [OpenCode](https://github.com/anomalyco/opencode) project.
+- Ported, stripped, and maintained for native Termux by [patelakash007](https://github.com/patelakash007).
+- Built and automated with **Antigravity CLI** and **GitHub Actions**.
+
+---
+
+## License
+
+[MIT](LICENSE) © 2025 OpenCode & patelakash007

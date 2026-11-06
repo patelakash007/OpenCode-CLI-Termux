@@ -1,12 +1,12 @@
 {
   "name": "@opencode/pty",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "Persistent PTY service for OpenCode",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/anomalyco/opencode.git",
+    "url": "git+https://github.com/patelakash007/OpenCode-CLI-Termux.git",
     "directory": "packages/process-daemon/npm"
   },
   "exports": {
