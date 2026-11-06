@@ -2,14 +2,13 @@ name: build-termux
 
 on:
   push:
-    branches: [dev]
-    paths:
-      - "packages/**"
-      - ".github/workflows/build-termux.yml"
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
     inputs:
       release_tag:
-        description: "Release tag (optional, e.g. v2.2.5-termux)"
+        description: "Release tag (optional, e.g. v1.0.0)"
         required: false
         type: string
 
