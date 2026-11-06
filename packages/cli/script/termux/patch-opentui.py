@@ -28,6 +28,18 @@ def patch_opentui(opentui_root):
     lib_arch = os.path.join(ndk_sysroot, "usr/lib/aarch64-linux-android").replace("\\", "/")
     lib_api24 = os.path.join(ndk_sysroot, "usr/lib/aarch64-linux-android/24").replace("\\", "/")
 
+    # Generate /tmp/android-libc.txt
+    libc_path = "/tmp/android-libc.txt"
+    with open(libc_path, "w", encoding="utf-8") as f:
+        f.write(f"""include_dir={include_general}
+sys_include_dir={include_arch}
+crt_dir={lib_api24}
+msvc_lib_dir=
+kernel32_lib_dir=
+gcc_dir=
+""")
+    print(f"Generated {libc_path}")
+
     # Patch NDK headers to prevent host glibc leakage
     limits_path = os.path.join(ndk_sysroot, "usr/include/limits.h")
     if os.path.exists(limits_path):
@@ -254,9 +266,6 @@ def patch_opentui(opentui_root):
         .pic = true,
     }});
     if (target.result.abi.isAndroid()) {{
-        module.addCMacro("__ANDROID_API__", "24");
-        module.addCMacro("__ANDROID_MIN_SDK_VERSION__", "24");
-        module.addCMacro("__ANDROID__", "1");
         module.addSystemIncludePath(.{{ .cwd_relative = "{include_cxx}" }});
         module.addSystemIncludePath(.{{ .cwd_relative = "{include_arch}" }});
         module.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
@@ -283,9 +292,6 @@ def patch_opentui(opentui_root):
         .optimize = optimize,
     }});
     if (module_target.result.abi.isAndroid()) {{
-        opentui_module.addCMacro("__ANDROID_API__", "24");
-        opentui_module.addCMacro("__ANDROID_MIN_SDK_VERSION__", "24");
-        opentui_module.addCMacro("__ANDROID__", "1");
         opentui_module.addSystemIncludePath(.{{ .cwd_relative = "{include_cxx}" }});
         opentui_module.addSystemIncludePath(.{{ .cwd_relative = "{include_arch}" }});
         opentui_module.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
