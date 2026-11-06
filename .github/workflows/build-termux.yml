@@ -67,6 +67,11 @@ jobs:
           echo "CC_aarch64_linux_android=$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang" >> "$GITHUB_ENV"
           echo "CXX_aarch64_linux_android=$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang++" >> "$GITHUB_ENV"
           echo "AR_aarch64_linux_android=$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" >> "$GITHUB_ENV"
+          echo "CFLAGS_aarch64_linux_android=--target=aarch64-linux-android24" >> "$GITHUB_ENV"
+          echo "CXXFLAGS_aarch64_linux_android=--target=aarch64-linux-android24" >> "$GITHUB_ENV"
+          echo "BINDGEN_EXTRA_CLANG_ARGS=--target=aarch64-linux-android24" >> "$GITHUB_ENV"
+          echo "=== Patching NDK sys/cdefs.h to allow unversioned/generic triples ==="
+          sed -i 's/#error Unversioned target triples are not supported!/\/\/ #error Unversioned target triples are not supported!\n#ifndef __ANDROID_API__\n#define __ANDROID_API__ 24\n#endif\n#ifndef __ANDROID_MIN_SDK_VERSION__\n#define __ANDROID_MIN_SDK_VERSION__ 24\n#endif/' "$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/sys/cdefs.h" || true
 
       - name: Clone OpenTUI and cross-compile libopentui.so
         run: |
@@ -77,8 +82,8 @@ jobs:
           sh scripts/prepare-zig-deps.sh
           echo "=== Patching OpenTUI for Android Bionic ==="
           python3 "$GITHUB_WORKSPACE/packages/cli/script/termux/patch-opentui.py" /tmp/opentui
-          echo "=== Building libopentui.so for aarch64-linux-android ==="
-          zig build -Doptimize=ReleaseFast -Dtarget=aarch64-linux-android -Dlibrary-target=aarch64-linux-android
+          echo "=== Building libopentui.so for aarch64-linux-android.24 ==="
+          zig build -Doptimize=ReleaseFast -Dtarget=aarch64-linux-android.24 -Dlibrary-target=aarch64-linux-android.24
           mkdir -p "$GITHUB_WORKSPACE/.build-termux/opentui"
           FOUND_SO=$(find /tmp/opentui -name "libopentui.so" | head -n 1)
           if [ -z "$FOUND_SO" ]; then

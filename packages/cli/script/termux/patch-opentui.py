@@ -121,6 +121,7 @@ def patch_opentui(opentui_root):
     miniaudio_translate.addIncludePath(b.path("src"));
     if (is_android) {{
         miniaudio_translate.defineCMacro("__ANDROID_API__", "24");
+        miniaudio_translate.defineCMacro("__ANDROID_MIN_SDK_VERSION__", "24");
         miniaudio_translate.defineCMacro("__ANDROID__", "1");
         miniaudio_translate.addSystemIncludePath(.{{ .cwd_relative = "{include_arch}" }});
         miniaudio_translate.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
@@ -137,6 +138,7 @@ def patch_opentui(opentui_root):
     yoga_translate.addIncludePath(yoga_dep.path(""));
     if (is_android) {{
         yoga_translate.defineCMacro("__ANDROID_API__", "24");
+        yoga_translate.defineCMacro("__ANDROID_MIN_SDK_VERSION__", "24");
         yoga_translate.defineCMacro("__ANDROID__", "1");
         yoga_translate.addSystemIncludePath(.{{ .cwd_relative = "{include_arch}" }});
         yoga_translate.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
@@ -177,6 +179,7 @@ def patch_opentui(opentui_root):
     }});
     if (is_android) {{
         header.defineCMacro("__ANDROID_API__", "24");
+        header.defineCMacro("__ANDROID_MIN_SDK_VERSION__", "24");
         header.defineCMacro("__ANDROID__", "1");
         header.addSystemIncludePath(.{{ .cwd_relative = "{include_arch}" }});
         header.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
@@ -209,6 +212,7 @@ def patch_opentui(opentui_root):
     }});
     if (target.result.abi.isAndroid()) {{
         module.addCMacro("__ANDROID_API__", "24");
+        module.addCMacro("__ANDROID_MIN_SDK_VERSION__", "24");
         module.addCMacro("__ANDROID__", "1");
         module.addSystemIncludePath(.{{ .cwd_relative = "{include_cxx}" }});
         module.addSystemIncludePath(.{{ .cwd_relative = "{include_arch}" }});
@@ -237,6 +241,7 @@ def patch_opentui(opentui_root):
     }});
     if (module_target.result.abi.isAndroid()) {{
         opentui_module.addCMacro("__ANDROID_API__", "24");
+        opentui_module.addCMacro("__ANDROID_MIN_SDK_VERSION__", "24");
         opentui_module.addCMacro("__ANDROID__", "1");
         opentui_module.addSystemIncludePath(.{{ .cwd_relative = "{include_cxx}" }});
         opentui_module.addSystemIncludePath(.{{ .cwd_relative = "{include_arch}" }});
