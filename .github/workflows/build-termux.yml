@@ -82,15 +82,17 @@ jobs:
             NDK_DIR="/usr/local/lib/android/sdk/ndk/27.0.12077973"
           fi
           echo "NDK path: $NDK_DIR"
-          echo "ANDROID_NDK_HOME=$NDK_DIR" >> "$GITHUB_ENV"
-          echo "NDK_DIR=$NDK_DIR" >> "$GITHUB_ENV"
-          echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang" >> "$GITHUB_ENV"
-          echo "CC_aarch64_linux_android=$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang" >> "$GITHUB_ENV"
-          echo "CXX_aarch64_linux_android=$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang++" >> "$GITHUB_ENV"
-          echo "AR_aarch64_linux_android=$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" >> "$GITHUB_ENV"
-          echo "CFLAGS_aarch64_linux_android=--target=aarch64-linux-android24" >> "$GITHUB_ENV"
-          echo "CXXFLAGS_aarch64_linux_android=--target=aarch64-linux-android24" >> "$GITHUB_ENV"
-          echo "BINDGEN_EXTRA_CLANG_ARGS=--target=aarch64-linux-android24" >> "$GITHUB_ENV"
+          {
+            echo "ANDROID_NDK_HOME=$NDK_DIR"
+            echo "NDK_DIR=$NDK_DIR"
+            echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang"
+            echo "CC_aarch64_linux_android=$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang"
+            echo "CXX_aarch64_linux_android=$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang++"
+            echo "AR_aarch64_linux_android=$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+            echo "CFLAGS_aarch64_linux_android=--target=aarch64-linux-android24"
+            echo "CXXFLAGS_aarch64_linux_android=--target=aarch64-linux-android24"
+            echo "BINDGEN_EXTRA_CLANG_ARGS=--target=aarch64-linux-android24"
+          } >> "$GITHUB_ENV"
           echo "=== Patching NDK sys/cdefs.h to allow unversioned/generic triples ==="
           sed -i 's/#error Unversioned target triples are not supported!/\/\/ #error Unversioned target triples are not supported!\n#ifndef __ANDROID_API__\n#define __ANDROID_API__ 24\n#endif\n#ifndef __ANDROID_MIN_SDK_VERSION__\n#define __ANDROID_MIN_SDK_VERSION__ 24\n#endif/' "$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/sys/cdefs.h" || true
           echo "=== Patching NDK limits.h to isolate from host glibc ==="
@@ -124,8 +126,9 @@ jobs:
         run: |
           echo "=== Cross-compiling opencode-pty ==="
           cd packages/process-daemon
-          echo "OPENCODE_REAL_ZIG=$(command -v zig)" >> "$GITHUB_ENV"
-          export OPENCODE_REAL_ZIG=$(command -v zig)
+          OPENCODE_REAL_ZIG=$(command -v zig)
+          export OPENCODE_REAL_ZIG
+          echo "OPENCODE_REAL_ZIG=$OPENCODE_REAL_ZIG" >> "$GITHUB_ENV"
           cargo build --release --target aarch64-linux-android || echo "opencode-pty build exited with code $?"
           mkdir -p "$GITHUB_WORKSPACE/.build-termux/pty"
           if [ -f target/aarch64-linux-android/release/opencode-pty ]; then
