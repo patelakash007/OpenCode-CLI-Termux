@@ -22,6 +22,7 @@ def patch_opentui(opentui_root):
     ndk_sysroot = os.path.join(ndk_home, "toolchains/llvm/prebuilt/linux-x86_64/sysroot")
     print(f"Using NDK Sysroot: {ndk_sysroot}")
 
+    include_cxx = os.path.join(ndk_sysroot, "usr/include/c++/v1").replace("\\", "/")
     include_general = os.path.join(ndk_sysroot, "usr/include").replace("\\", "/")
     include_arch = os.path.join(ndk_sysroot, "usr/include/aarch64-linux-android").replace("\\", "/")
     lib_arch = os.path.join(ndk_sysroot, "usr/lib/aarch64-linux-android").replace("\\", "/")
@@ -119,8 +120,10 @@ def patch_opentui(opentui_root):
     }});
     miniaudio_translate.addIncludePath(b.path("src"));
     if (is_android) {{
-        miniaudio_translate.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
+        miniaudio_translate.defineCMacro("__ANDROID_API__", "24");
+        miniaudio_translate.defineCMacro("__ANDROID__", "1");
         miniaudio_translate.addSystemIncludePath(.{{ .cwd_relative = "{include_arch}" }});
+        miniaudio_translate.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
     }}
     module.addImport("miniaudio", miniaudio_translate.createModule());
 
@@ -133,8 +136,10 @@ def patch_opentui(opentui_root):
     }});
     yoga_translate.addIncludePath(yoga_dep.path(""));
     if (is_android) {{
-        yoga_translate.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
+        yoga_translate.defineCMacro("__ANDROID_API__", "24");
+        yoga_translate.defineCMacro("__ANDROID__", "1");
         yoga_translate.addSystemIncludePath(.{{ .cwd_relative = "{include_arch}" }});
+        yoga_translate.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
     }}
     module.addImport("yoga", yoga_translate.createModule());
     addContextABIHeader(b, module, optimize, target);
@@ -171,8 +176,10 @@ def patch_opentui(opentui_root):
         .link_libc = !is_android,
     }});
     if (is_android) {{
-        header.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
+        header.defineCMacro("__ANDROID_API__", "24");
+        header.defineCMacro("__ANDROID__", "1");
         header.addSystemIncludePath(.{{ .cwd_relative = "{include_arch}" }});
+        header.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
     }}
     module.addImport("context_abi_c", header.createModule());
 }}"""
@@ -201,8 +208,11 @@ def patch_opentui(opentui_root):
         .pic = true,
     }});
     if (target.result.abi.isAndroid()) {{
-        module.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
+        module.addCMacro("__ANDROID_API__", "24");
+        module.addCMacro("__ANDROID__", "1");
+        module.addSystemIncludePath(.{{ .cwd_relative = "{include_cxx}" }});
         module.addSystemIncludePath(.{{ .cwd_relative = "{include_arch}" }});
+        module.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
         module.addLibraryPath(.{{ .cwd_relative = "{lib_arch}" }});
         module.addLibraryPath(.{{ .cwd_relative = "{lib_api24}" }});
     }}
@@ -226,8 +236,11 @@ def patch_opentui(opentui_root):
         .optimize = optimize,
     }});
     if (module_target.result.abi.isAndroid()) {{
-        opentui_module.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
+        opentui_module.addCMacro("__ANDROID_API__", "24");
+        opentui_module.addCMacro("__ANDROID__", "1");
+        opentui_module.addSystemIncludePath(.{{ .cwd_relative = "{include_cxx}" }});
         opentui_module.addSystemIncludePath(.{{ .cwd_relative = "{include_arch}" }});
+        opentui_module.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
         opentui_module.addLibraryPath(.{{ .cwd_relative = "{lib_arch}" }});
         opentui_module.addLibraryPath(.{{ .cwd_relative = "{lib_api24}" }});
     }}
