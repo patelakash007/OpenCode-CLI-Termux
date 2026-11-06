@@ -89,7 +89,7 @@ jobs:
           python3 "$GITHUB_WORKSPACE/packages/cli/script/termux/patch-opentui.py" /tmp/opentui
           cat /tmp/android-libc.txt
           echo "=== Building libopentui.so for aarch64-linux-android.24 ==="
-          zig build --libc /tmp/android-libc.txt -Doptimize=ReleaseFast -Dtarget=aarch64-linux-android.24 -Dlibrary-target=aarch64-linux-android.24
+          zig build -Doptimize=ReleaseFast -Dtarget=aarch64-linux-android.24 -Dlibrary-target=aarch64-linux-android.24
           mkdir -p "$GITHUB_WORKSPACE/.build-termux/opentui"
           FOUND_SO=$(find /tmp/opentui -name "libopentui.so" | head -n 1)
           if [ -z "$FOUND_SO" ]; then

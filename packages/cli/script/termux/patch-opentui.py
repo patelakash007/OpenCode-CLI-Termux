@@ -42,9 +42,9 @@ def patch_opentui(opentui_root):
             elif line.startswith("crt_dir="):
                 new_lines.append(f"crt_dir={lib_api24}\n")
             elif line.startswith("cc_dir="):
-                new_lines.append("cc_dir=\n")
+                new_lines.append(f"cc_dir={lib_api24}\n")
             elif line.startswith("gcc_dir="):
-                new_lines.append("gcc_dir=\n")
+                new_lines.append(f"gcc_dir={lib_api24}\n")
             else:
                 new_lines.append(line)
         with open(libc_path, "w", encoding="utf-8") as f:
@@ -56,10 +56,17 @@ sys_include_dir={include_arch}
 crt_dir={lib_api24}
 msvc_lib_dir=
 kernel32_lib_dir=
-gcc_dir=
+gcc_dir={lib_api24}
 darwin_sdk_dir=
-cc_dir=
+cc_dir={lib_api24}
 """)
+    native_libc = os.path.join(opentui_root, "packages/native/android-libc.txt")
+    try:
+        import shutil
+        shutil.copyfile(libc_path, native_libc)
+        print(f"Copied {libc_path} to {native_libc}")
+    except Exception as e:
+        print(f"Notice: could not copy to {native_libc}: {e}")
     print(f"Configured {libc_path}")
 
     # Patch NDK headers to prevent host glibc leakage
@@ -139,6 +146,16 @@ cc_dir=
     if os.path.exists(build_path):
         with open(build_path, "r", encoding="utf-8") as f:
             content = f.read()
+
+        # Patch SUPPORTED_TARGETS
+        target_supported = """const SUPPORTED_TARGETS = [_]SupportedTarget{
+    .{ .zig_target = "x86_64-linux-gnu.2.17", .output_name = "x86_64-linux", .description = "Linux x86_64" },"""
+        repl_supported = """const SUPPORTED_TARGETS = [_]SupportedTarget{
+    .{ .zig_target = "aarch64-linux-android.24", .output_name = "android-arm64", .description = "Android ARM64" },
+    .{ .zig_target = "x86_64-linux-gnu.2.17", .output_name = "x86_64-linux", .description = "Linux x86_64" },"""
+        if target_supported in content:
+            content = content.replace(target_supported, repl_supported, 1)
+            print("Patched SUPPORTED_TARGETS for Android ARM64")
 
         # Patch pthread link
         target_pthread = """        .linux => {
@@ -268,7 +285,14 @@ cc_dir=
             print("Patched addContextABIHeader for Android")
 
         # Patch createLibraries
-        target_createlibs = """    const module = b.createModule(.{
+        target_createlibs = """fn createLibraries(
+    b: *std.Build,
+    target: std.Build.ResolvedTarget,
+    optimize: std.lang.Optimize,
+    build_options: *std.Build.Step.Options,
+    macos_sdk_path: ?[]const u8,
+) [2]*std.Build.Step.Compile {
+    const module = b.createModule(.{
         .root_source_file = b.path(ROOT_SOURCE_FILE),
         .target = target,
         .optimize = optimize,
@@ -277,8 +301,41 @@ cc_dir=
         .strip = false,
         .pic = true,
     });
-    applyDependencies(b, module, optimize, target, build_options);"""
-        repl_createlibs = f"""    const module = b.createModule(.{{
+    applyDependencies(b, module, optimize, target, build_options);
+    addNativeAudioDependencies(b, module, target, macos_sdk_path);
+    addYogaDependencies(b, module, false);
+    const shared = b.addLibrary(.{
+        .name = LIB_NAME,
+        .root_module = module,
+        .linkage = .dynamic,
+    });
+    if (target.result.os.tag == .linux and optimize != .debug) shared.build_id = .sha1;
+    // Zig's default DLL entry skips the MinGW CRT startup, so CRT state such as
+    // the DLL atexit table would stay uninitialized. MinGW's strtod registers
+    // there, and both the Zig code and FFmpeg call it, so this applies with or
+    // without video.
+    if (target.result.os.tag == .windows and target.result.abi == .gnu) {
+        shared.entry = .{ .symbol_name = "DllMainCRTStartup" };
+    }
+    const static = b.addLibrary(.{
+        // COFF uses .lib for both archives and DLL import libraries.
+        .name = if (target.result.os.tag == .windows) "opentui-static" else LIB_NAME,
+        .root_module = module,
+        .linkage = .static,
+    });
+    shared.installHeader(b.path("include/opentui.h"), "opentui.h");
+    static.installHeader(b.path("include/opentui.h"), "opentui.h");
+    return .{ shared, static };
+}"""
+        repl_createlibs = f"""fn createLibraries(
+    b: *std.Build,
+    target: std.Build.ResolvedTarget,
+    optimize: std.lang.Optimize,
+    build_options: *std.Build.Step.Options,
+    macos_sdk_path: ?[]const u8,
+) [2]*std.Build.Step.Compile {{
+    const is_android = target.result.abi.isAndroid();
+    const module = b.createModule(.{{
         .root_source_file = b.path(ROOT_SOURCE_FILE),
         .target = target,
         .optimize = optimize,
@@ -287,14 +344,47 @@ cc_dir=
         .strip = false,
         .pic = true,
     }});
-    if (target.result.abi.isAndroid()) {{
+    if (is_android) {{
         module.addSystemIncludePath(.{{ .cwd_relative = "{include_cxx}" }});
         module.addSystemIncludePath(.{{ .cwd_relative = "{include_arch}" }});
         module.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
         module.addLibraryPath(.{{ .cwd_relative = "{lib_arch}" }});
         module.addLibraryPath(.{{ .cwd_relative = "{lib_api24}" }});
     }}
-    applyDependencies(b, module, optimize, target, build_options);"""
+    applyDependencies(b, module, optimize, target, build_options);
+    addNativeAudioDependencies(b, module, target, macos_sdk_path);
+    addYogaDependencies(b, module, false);
+    const shared = b.addLibrary(.{{
+        .name = LIB_NAME,
+        .root_module = module,
+        .linkage = .dynamic,
+    }});
+    if (target.result.os.tag == .linux and optimize != .debug) shared.build_id = .sha1;
+    // Zig's default DLL entry skips the MinGW CRT startup, so CRT state such as
+    // the DLL atexit table would stay uninitialized. MinGW's strtod registers
+    // there, and both the Zig code and FFmpeg call it, so this applies with or
+    // without video.
+    if (target.result.os.tag == .windows and target.result.abi == .gnu) {{
+        shared.entry = .{{ .symbol_name = "DllMainCRTStartup" }};
+    }}
+    const static = b.addLibrary(.{{
+        // COFF uses .lib for both archives and DLL import libraries.
+        .name = if (target.result.os.tag == .windows) "opentui-static" else LIB_NAME,
+        .root_module = module,
+        .linkage = .static,
+    }});
+    if (is_android) {{
+        shared.setLibCFile(.{{ .cwd_relative = "/tmp/android-libc.txt" }});
+        shared.addLibraryPath(.{{ .cwd_relative = "{lib_arch}" }});
+        shared.addLibraryPath(.{{ .cwd_relative = "{lib_api24}" }});
+        static.setLibCFile(.{{ .cwd_relative = "/tmp/android-libc.txt" }});
+        static.addLibraryPath(.{{ .cwd_relative = "{lib_arch}" }});
+        static.addLibraryPath(.{{ .cwd_relative = "{lib_api24}" }});
+    }}
+    shared.installHeader(b.path("include/opentui.h"), "opentui.h");
+    static.installHeader(b.path("include/opentui.h"), "opentui.h");
+    return .{{ shared, static }};
+}}"""
         if target_createlibs in content:
             content = content.replace(target_createlibs, repl_createlibs, 1)
             print("Patched createLibraries for Android")
