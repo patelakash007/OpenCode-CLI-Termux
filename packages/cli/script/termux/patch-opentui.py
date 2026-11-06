@@ -30,15 +30,33 @@ def patch_opentui(opentui_root):
 
     # Generate /tmp/android-libc.txt
     libc_path = "/tmp/android-libc.txt"
-    with open(libc_path, "w", encoding="utf-8") as f:
-        f.write(f"""include_dir={include_general}
+    if os.path.exists(libc_path):
+        with open(libc_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+        new_lines = []
+        for line in lines:
+            if line.startswith("include_dir="):
+                new_lines.append(f"include_dir={include_general}\n")
+            elif line.startswith("sys_include_dir="):
+                new_lines.append(f"sys_include_dir={include_arch}\n")
+            elif line.startswith("crt_dir="):
+                new_lines.append(f"crt_dir={lib_api24}\n")
+            else:
+                new_lines.append(line)
+        with open(libc_path, "w", encoding="utf-8") as f:
+            f.writelines(new_lines)
+    else:
+        with open(libc_path, "w", encoding="utf-8") as f:
+            f.write(f"""include_dir={include_general}
 sys_include_dir={include_arch}
 crt_dir={lib_api24}
 msvc_lib_dir=
 kernel32_lib_dir=
 gcc_dir=
+darwin_sdk_dir=
+cc_dir=
 """)
-    print(f"Generated {libc_path}")
+    print(f"Configured {libc_path}")
 
     # Patch NDK headers to prevent host glibc leakage
     limits_path = os.path.join(ndk_sysroot, "usr/include/limits.h")

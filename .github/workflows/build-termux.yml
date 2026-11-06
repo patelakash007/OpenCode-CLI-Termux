@@ -84,6 +84,12 @@ jobs:
           sh scripts/prepare-zig-deps.sh
           echo "=== Patching OpenTUI for Android Bionic ==="
           python3 "$GITHUB_WORKSPACE/packages/cli/script/termux/patch-opentui.py" /tmp/opentui
+          echo "=== Generating Zig libc.txt for Android ==="
+          zig libc > /tmp/android-libc.txt
+          sed -i "s|^include_dir=.*|include_dir=$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include|" /tmp/android-libc.txt
+          sed -i "s|^sys_include_dir=.*|sys_include_dir=$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/aarch64-linux-android|" /tmp/android-libc.txt
+          sed -i "s|^crt_dir=.*|crt_dir=$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/24|" /tmp/android-libc.txt
+          cat /tmp/android-libc.txt
           echo "=== Building libopentui.so for aarch64-linux-android.24 ==="
           zig build --libc /tmp/android-libc.txt -Doptimize=ReleaseFast -Dtarget=aarch64-linux-android.24 -Dlibrary-target=aarch64-linux-android.24
           mkdir -p "$GITHUB_WORKSPACE/.build-termux/opentui"
