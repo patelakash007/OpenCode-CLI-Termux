@@ -5,6 +5,28 @@ import sys
 def patch_opentui(opentui_root):
     print(f"=== Patching OpenTUI in {opentui_root} for Android Bionic ===")
 
+    ndk_home = os.environ.get("ANDROID_NDK_HOME", "")
+    if not ndk_home or not os.path.exists(ndk_home):
+        for candidate in [
+            "/usr/local/lib/android/sdk/ndk/30.0.16248370",
+            "/usr/local/lib/android/sdk/ndk/27.0.12077973",
+        ]:
+            if os.path.exists(candidate):
+                ndk_home = candidate
+                break
+
+    if not ndk_home:
+        print("Error: Could not locate ANDROID_NDK_HOME")
+        sys.exit(1)
+
+    ndk_sysroot = os.path.join(ndk_home, "toolchains/llvm/prebuilt/linux-x86_64/sysroot")
+    print(f"Using NDK Sysroot: {ndk_sysroot}")
+
+    include_general = os.path.join(ndk_sysroot, "usr/include").replace("\\", "/")
+    include_arch = os.path.join(ndk_sysroot, "usr/include/aarch64-linux-android").replace("\\", "/")
+    lib_arch = os.path.join(ndk_sysroot, "usr/lib/aarch64-linux-android").replace("\\", "/")
+    lib_api24 = os.path.join(ndk_sysroot, "usr/lib/aarch64-linux-android/24").replace("\\", "/")
+
     # 1. Patch miniaudio_shim.c
     shim_path = os.path.join(opentui_root, "packages/native/src/miniaudio_shim.c")
     if os.path.exists(shim_path):
@@ -82,47 +104,41 @@ def patch_opentui(opentui_root):
     module.addImport("yoga", yoga_translate.createModule());
     addContextABIHeader(b, module, optimize, target);
 }"""
-        repl_trans = """fn addTranslatedCImports(
+        repl_trans = f"""fn addTranslatedCImports(
     b: *std.Build,
     module: *std.Build.Module,
     optimize: std.lang.Optimize,
     target: std.Build.ResolvedTarget,
-) void {
+) void {{
     const is_android = target.result.abi.isAndroid();
-    const ndk_path = b.graph.env_map.get("ANDROID_NDK_HOME");
-    const ndk_sysroot = if (ndk_path) |ndk|
-        b.pathJoin(&.{ ndk, "toolchains/llvm/prebuilt/linux-x86_64/sysroot" })
-    else
-        null;
-
-    const miniaudio_translate = b.addTranslateC(.{
+    const miniaudio_translate = b.addTranslateC(.{{
         .root_source_file = b.path("src/vendor/miniaudio/miniaudio.h"),
         .target = target,
         .optimize = optimize,
         .link_libc = !is_android,
-    });
+    }});
     miniaudio_translate.addIncludePath(b.path("src"));
-    if (is_android and ndk_sysroot != null) {
-        miniaudio_translate.addSystemIncludePath(.{ .cwd_relative = b.pathJoin(&.{ ndk_sysroot.?, "usr/include" }) });
-        miniaudio_translate.addSystemIncludePath(.{ .cwd_relative = b.pathJoin(&.{ ndk_sysroot.?, "usr/include/aarch64-linux-android" }) });
-    }
+    if (is_android) {{
+        miniaudio_translate.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
+        miniaudio_translate.addSystemIncludePath(.{{ .cwd_relative = "{include_arch}" }});
+    }}
     module.addImport("miniaudio", miniaudio_translate.createModule());
 
-    const yoga_dep = b.dependency("yoga", .{});
-    const yoga_translate = b.addTranslateC(.{
+    const yoga_dep = b.dependency("yoga", .{{}});
+    const yoga_translate = b.addTranslateC(.{{
         .root_source_file = b.path("src/yoga-bridge.h"),
         .target = target,
         .optimize = optimize,
         .link_libc = !is_android,
-    });
+    }});
     yoga_translate.addIncludePath(yoga_dep.path(""));
-    if (is_android and ndk_sysroot != null) {
-        yoga_translate.addSystemIncludePath(.{ .cwd_relative = b.pathJoin(&.{ ndk_sysroot.?, "usr/include" }) });
-        yoga_translate.addSystemIncludePath(.{ .cwd_relative = b.pathJoin(&.{ ndk_sysroot.?, "usr/include/aarch64-linux-android" }) });
-    }
+    if (is_android) {{
+        yoga_translate.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
+        yoga_translate.addSystemIncludePath(.{{ .cwd_relative = "{include_arch}" }});
+    }}
     module.addImport("yoga", yoga_translate.createModule());
     addContextABIHeader(b, module, optimize, target);
-}"""
+}}"""
         if target_trans in content:
             content = content.replace(target_trans, repl_trans, 1)
             print("Patched addTranslatedCImports for Android")
@@ -141,31 +157,25 @@ def patch_opentui(opentui_root):
     });
     module.addImport("context_abi_c", header.createModule());
 }"""
-        repl_abi = """fn addContextABIHeader(
+        repl_abi = f"""fn addContextABIHeader(
     b: *std.Build,
     module: *std.Build.Module,
     optimize: std.lang.Optimize,
     target: std.Build.ResolvedTarget,
-) void {
+) void {{
     const is_android = target.result.abi.isAndroid();
-    const ndk_path = b.graph.env_map.get("ANDROID_NDK_HOME");
-    const ndk_sysroot = if (ndk_path) |ndk|
-        b.pathJoin(&.{ ndk, "toolchains/llvm/prebuilt/linux-x86_64/sysroot" })
-    else
-        null;
-
-    const header = b.addTranslateC(.{
+    const header = b.addTranslateC(.{{
         .root_source_file = b.path("include/opentui.h"),
         .target = target,
         .optimize = optimize,
         .link_libc = !is_android,
-    });
-    if (is_android and ndk_sysroot != null) {
-        header.addSystemIncludePath(.{ .cwd_relative = b.pathJoin(&.{ ndk_sysroot.?, "usr/include" }) });
-        header.addSystemIncludePath(.{ .cwd_relative = b.pathJoin(&.{ ndk_sysroot.?, "usr/include/aarch64-linux-android" }) });
-    }
+    }});
+    if (is_android) {{
+        header.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
+        header.addSystemIncludePath(.{{ .cwd_relative = "{include_arch}" }});
+    }}
     module.addImport("context_abi_c", header.createModule());
-}"""
+}}"""
         if target_abi in content:
             content = content.replace(target_abi, repl_abi, 1)
             print("Patched addContextABIHeader for Android")
@@ -181,7 +191,7 @@ def patch_opentui(opentui_root):
         .pic = true,
     });
     applyDependencies(b, module, optimize, target, build_options);"""
-        repl_createlibs = """    const module = b.createModule(.{
+        repl_createlibs = f"""    const module = b.createModule(.{{
         .root_source_file = b.path(ROOT_SOURCE_FILE),
         .target = target,
         .optimize = optimize,
@@ -189,16 +199,13 @@ def patch_opentui(opentui_root):
         // build detaches them before stripping only the distribution copy.
         .strip = false,
         .pic = true,
-    });
-    if (target.result.abi.isAndroid()) {
-        const ndk_path = b.graph.env_map.get("ANDROID_NDK_HOME");
-        if (ndk_path) |ndk| {
-            const sysroot = b.pathJoin(&.{ ndk, "toolchains/llvm/prebuilt/linux-x86_64/sysroot" });
-            module.addSystemIncludePath(.{ .cwd_relative = b.pathJoin(&.{ sysroot, "usr/include" }) });
-            module.addSystemIncludePath(.{ .cwd_relative = b.pathJoin(&.{ sysroot, "usr/include/aarch64-linux-android" }) });
-            module.addLibraryPath(.{ .cwd_relative = b.pathJoin(&.{ sysroot, "usr/lib/aarch64-linux-android/24" }) });
-        }
-    }
+    }});
+    if (target.result.abi.isAndroid()) {{
+        module.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
+        module.addSystemIncludePath(.{{ .cwd_relative = "{include_arch}" }});
+        module.addLibraryPath(.{{ .cwd_relative = "{lib_arch}" }});
+        module.addLibraryPath(.{{ .cwd_relative = "{lib_api24}" }});
+    }}
     applyDependencies(b, module, optimize, target, build_options);"""
         if target_createlibs in content:
             content = content.replace(target_createlibs, repl_createlibs, 1)
@@ -212,21 +219,18 @@ def patch_opentui(opentui_root):
         .optimize = optimize,
     });
     applyDependencies(b, opentui_module, optimize, module_target, build_options);"""
-        repl_mod = """    const module_target = b.standardTargetOptions(.{});
-    const opentui_module = b.addModule("opentui", .{
+        repl_mod = f"""    const module_target = b.standardTargetOptions(.{{}});
+    const opentui_module = b.addModule("opentui", .{{
         .root_source_file = b.path("src/opentui.zig"),
         .target = module_target,
         .optimize = optimize,
-    });
-    if (module_target.result.abi.isAndroid()) {
-        const ndk_path = b.graph.env_map.get("ANDROID_NDK_HOME");
-        if (ndk_path) |ndk| {
-            const sysroot = b.pathJoin(&.{ ndk, "toolchains/llvm/prebuilt/linux-x86_64/sysroot" });
-            opentui_module.addSystemIncludePath(.{ .cwd_relative = b.pathJoin(&.{ sysroot, "usr/include" }) });
-            opentui_module.addSystemIncludePath(.{ .cwd_relative = b.pathJoin(&.{ sysroot, "usr/include/aarch64-linux-android" }) });
-            opentui_module.addLibraryPath(.{ .cwd_relative = b.pathJoin(&.{ sysroot, "usr/lib/aarch64-linux-android/24" }) });
-        }
-    }
+    }});
+    if (module_target.result.abi.isAndroid()) {{
+        opentui_module.addSystemIncludePath(.{{ .cwd_relative = "{include_general}" }});
+        opentui_module.addSystemIncludePath(.{{ .cwd_relative = "{include_arch}" }});
+        opentui_module.addLibraryPath(.{{ .cwd_relative = "{lib_arch}" }});
+        opentui_module.addLibraryPath(.{{ .cwd_relative = "{lib_api24}" }});
+    }}
     applyDependencies(b, opentui_module, optimize, module_target, build_options);"""
         if target_mod in content:
             content = content.replace(target_mod, repl_mod, 1)
