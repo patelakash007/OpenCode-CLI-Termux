@@ -62,7 +62,7 @@ cp -v "$ROOT_DIR/packages/cli/script/termux/install.sh" "$DIST/install.sh"
 chmod 755 "$DIST/install.sh"
 
 echo "=== Verifying ELF dependencies (NO glibc allowed) ==="
-for file in $(find "$DIST" -type f \( -name "*.so" -o -name "*.node" -o -name "opencode-pty" \)); do
+find "$DIST" -type f \( -name "*.so" -o -name "*.node" -o -name "opencode-pty" \) | while read -r file; do
   echo "--- $file ---"
   readelf -d "$file" | grep -E 'NEEDED|RUNPATH' || true
   if readelf -d "$file" | grep -i 'libc\.so\.6'; then
