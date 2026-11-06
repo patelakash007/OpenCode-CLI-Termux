@@ -196,7 +196,7 @@ Follow these steps exactly to ship a new version (e.g. `v1.0.1`):
 - Whenever you make changes to `install.sh`, test it locally with:
   ```bash
   bash -n install.sh  # Syntax check
-  bash install.sh     # Dry run test
+  # WARNING: bash install.sh actually downloads and installs the package. Not a dry run. Test on a disposable device.
   ```
 
 ---

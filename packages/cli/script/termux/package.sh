@@ -91,7 +91,7 @@ Package: opencode
 Version: ${VERSION}
 Architecture: aarch64
 Maintainer: patelakash007
-Depends: nodejs (>= 20.0.0) | nodejs-lts (>= 20.0.0)
+Depends: nodejs (>= 26.0.0)
 Section: utils
 Priority: optional
 Homepage: https://github.com/patelakash007/OpenCode-CLI-Termux

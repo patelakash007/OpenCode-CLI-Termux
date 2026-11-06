@@ -42,9 +42,10 @@ if ! command -v node >/dev/null 2>&1; then
 else
     NODE_VERSION=$(node -v | sed 's/v//')
     NODE_MAJOR=$(echo "$NODE_VERSION" | cut -d. -f1)
-    if [ "$NODE_MAJOR" -lt 22 ]; then
-        echo -e "${YELLOW}Node.js version $NODE_VERSION detected. Node.js 22+ (preferably 26+) is recommended.${NC}"
-        echo -e "${YELLOW}Run 'pkg update && pkg install nodejs' if you encounter any runtime issues.${NC}"
+    if [ "$NODE_MAJOR" -lt 26 ]; then
+        echo -e "${YELLOW}Node.js version $NODE_VERSION detected. Node.js 26+ is required for OpenCode CLI.${NC}"
+        echo -e "${YELLOW}Upgrading nodejs via pkg...${NC}"
+        pkg install -y nodejs
     fi
 fi
 

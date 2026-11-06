@@ -68,11 +68,12 @@ You can also download the assets manually from [Releases](https://github.com/pat
 
 - **Debian Package**:
   ```bash
-  dpkg -i opencode_2.2.5_aarch64.deb
+  dpkg -i opencode_1.0.0_aarch64.deb
   ```
 - **Standalone Tarball**:
   ```bash
-  tar -xzf opencode-termux-aarch64.tar.gz
+  mkdir opencode-termux-aarch64
+  tar -xzf opencode-termux-aarch64.tar.gz -C opencode-termux-aarch64
   cd opencode-termux-aarch64
   bash install.sh
   ```
