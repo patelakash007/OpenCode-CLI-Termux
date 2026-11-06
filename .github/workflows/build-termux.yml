@@ -39,9 +39,13 @@ jobs:
           node-version: 26
 
       - name: Set up Zig
-        uses: mlugg/setup-zig@v2
-        with:
-          version: 0.16.0
+        run: |
+          echo "=== Installing Zig 0.17.0 ==="
+          curl -fsSL https://ziglang.org/download/0.17.0/zig-x86_64-linux-0.17.0.tar.xz -o /tmp/zig.tar.xz
+          tar -xJf /tmp/zig.tar.xz -C /tmp
+          echo "/tmp/zig-x86_64-linux-0.17.0" >> "$GITHUB_PATH"
+          echo "OPENCODE_REAL_ZIG=/tmp/zig-x86_64-linux-0.17.0/zig" >> "$GITHUB_ENV"
+          /tmp/zig-x86_64-linux-0.17.0/zig version
 
       - name: Set up Rust
         run: |
