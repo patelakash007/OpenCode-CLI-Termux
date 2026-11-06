@@ -102,6 +102,12 @@ Running OpenCode natively on Android required solving four core compatibility hu
 
 ---
 
+## Maintainer Guide
+
+For rules on how this repository is maintained, how upstream updates are safely pulled without re-introducing bloat, and the 7 inviolable laws of native Termux compilation, see [MAINTAINING.md](MAINTAINING.md).
+
+---
+
 ## Credits
 
 - Based on the upstream [OpenCode](https://github.com/anomalyco/opencode) project.
