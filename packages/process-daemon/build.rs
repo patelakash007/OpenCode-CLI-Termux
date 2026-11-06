@@ -114,6 +114,7 @@ fn main() {
             "aarch64-apple-darwin" => "aarch64-macos",
             "x86_64-pc-windows-msvc" => "x86_64-windows-msvc",
             "aarch64-pc-windows-msvc" => "aarch64-windows-msvc",
+            "aarch64-linux-android" => "aarch64-linux-android",
             _ => panic!("unsupported Ghostty target: {target}"),
         };
         build.arg(format!("-Dtarget={zig_target}"));

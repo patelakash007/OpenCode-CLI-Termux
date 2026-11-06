@@ -1,4 +1,4 @@
-const platforms = ["darwin", "linux", "win32"] as const
+const platforms = ["darwin", "linux", "win32", "android"] as const
 
 export type NodeTarget = ReturnType<typeof nodeTarget>
 
@@ -9,10 +9,18 @@ export function nodeTarget(platform: string, arch: string) {
 
   const targetPlatform = platform as (typeof platforms)[number]
   const targetArch = arch as "arm64" | "x64"
-  const nodePtyPackage = `@lydell/node-pty-${targetPlatform}-${targetArch}`
-  const parcelWatcherPackage = `@parcel/watcher-${targetPlatform}-${targetArch}${targetPlatform === "linux" ? "-glibc" : ""}`
-  const fffPackage = `@ff-labs/fff-bin-${targetPlatform}-${targetArch}${targetPlatform === "linux" ? "-gnu" : ""}`
-  const fffFfiPackage = `@yuuang/ffi-rs-${targetPlatform}-${targetArch}${targetPlatform === "linux" ? "-gnu" : targetPlatform === "win32" ? "-msvc" : ""}`
+  const nodePtyPackage = targetPlatform === "android"
+    ? "@lydell/node-pty-linux-arm64"
+    : `@lydell/node-pty-${targetPlatform}-${targetArch}`
+  const parcelWatcherPackage = targetPlatform === "android"
+    ? "@parcel/watcher-linux-arm64-glibc"
+    : `@parcel/watcher-${targetPlatform}-${targetArch}${targetPlatform === "linux" ? "-glibc" : ""}`
+  const fffPackage = targetPlatform === "android"
+    ? "@ff-labs/fff-bin-linux-arm64-gnu"
+    : `@ff-labs/fff-bin-${targetPlatform}-${targetArch}${targetPlatform === "linux" ? "-gnu" : ""}`
+  const fffFfiPackage = targetPlatform === "android"
+    ? "@yuuang/ffi-rs-linux-arm64-gnu"
+    : `@yuuang/ffi-rs-${targetPlatform}-${targetArch}${targetPlatform === "linux" ? "-gnu" : targetPlatform === "win32" ? "-msvc" : ""}`
   const opencodePtyAsset = targetPlatform === "win32" ? "opencode-pty/opencode-pty.exe" : "opencode-pty/opencode-pty"
 
   return {
@@ -25,7 +33,7 @@ export function nodeTarget(platform: string, arch: string) {
     fffPackage,
     fffAsset: `${fffPackage}/${targetPlatform === "darwin" ? "libfff_c.dylib" : targetPlatform === "win32" ? "fff_c.dll" : "libfff_c.so"}`,
     fffFfiPackage,
-    fffFfiAsset: `${fffFfiPackage}/ffi-rs.${targetPlatform}-${targetArch}${targetPlatform === "linux" ? "-gnu" : targetPlatform === "win32" ? "-msvc" : ""}.node`,
+    fffFfiAsset: `${fffFfiPackage}/ffi-rs.${targetPlatform === "android" ? "linux" : targetPlatform}-${targetArch}${targetPlatform === "linux" || targetPlatform === "android" ? "-gnu" : targetPlatform === "win32" ? "-msvc" : ""}.node`,
     opencodePtyAsset,
   }
 }

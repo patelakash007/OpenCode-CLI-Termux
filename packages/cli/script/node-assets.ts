@@ -20,17 +20,17 @@ export type NodeAsset = {
 
 export async function collectNodeAssets(target: NodeTarget) {
   const opencodePty = await resolveOpencodePty({
-    platform: target.platform,
+    platform: target.platform === "android" ? "linux" : target.platform,
     arch: target.arch,
-    ...(target.platform === "linux" ? { libc: "glibc" as const } : {}),
+    ...((target.platform === "linux" || target.platform === "android") ? { libc: "glibc" as const } : {}),
   })
   const ptyEntry = fileURLToPath(import.meta.resolve(target.nodePtyPackage))
   const ptyRoot = path.resolve(path.dirname(ptyEntry), "..")
   const assets: NodeAsset[] = [
     ...getNodeAssets({
-      platform: target.platform,
+      platform: target.platform === "android" ? "linux" : target.platform,
       arch: target.arch,
-      ...(target.platform === "linux" ? { libc: "glibc" as const } : {}),
+      ...((target.platform === "linux" || target.platform === "android") ? { libc: "glibc" as const } : {}),
     }),
     { key: target.parcelWatcherAsset, source: fileURLToPath(import.meta.resolve(target.parcelWatcherPackage)) },
     { key: target.fffAsset, source: fileURLToPath(import.meta.resolve(target.fffPackage)) },

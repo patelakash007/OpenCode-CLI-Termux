@@ -41,6 +41,7 @@ const allTargets = [
   nodeTarget("darwin", "arm64"),
   nodeTarget("win32", "arm64"),
   nodeTarget("win32", "x64"),
+  nodeTarget("android", "arm64"),
 ]
 const targets = requested
   ? allTargets.filter((target) => targetName(target) === requested)

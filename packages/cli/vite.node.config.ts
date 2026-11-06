@@ -244,7 +244,14 @@ try {
   globalThis.__OPENCODE_FFF_FFI = require(process.env.OPENCODE_FFF_FFI_PATH)
 } catch {}
 globalThis.__OPENCODE_PHOTON_WASM_PATH = process.env.OPENCODE_PHOTON_WASM_PATH
-if (process.platform === "linux") process.env.OPENTUI_LIBC = "glibc"`
+if (process.platform === "android") {
+  try {
+    Object.defineProperty(process, "platform", { value: "linux" })
+  } catch {}
+  process.env.OPENTUI_LIBC = "glibc"
+} else if (process.platform === "linux") {
+  process.env.OPENTUI_LIBC = "glibc"
+}`
 }
 
 export type NodeBuildInput = {
