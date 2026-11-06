@@ -417,6 +417,23 @@ cc_dir={lib_api24}
     else:
         print(f"Error: {build_path} not found")
 
+    # 3. Patch clipboard/host.zig for missing pthread_tryjoin_np in Bionic
+    host_path = os.path.join(opentui_root, "packages/native/src/clipboard/host.zig")
+    if os.path.exists(host_path):
+        with open(host_path, "r", encoding="utf-8") as f:
+            hcontent = f.read()
+        target_h = 'extern "c" fn pthread_tryjoin_np(thread: std.Thread.Handle, result: ?*?*anyopaque) c_int;'
+        repl_h = """pub export fn pthread_tryjoin_np(thread: std.Thread.Handle, result: ?*?*anyopaque) callconv(.c) c_int {
+    _ = thread;
+    _ = result;
+    return 0;
+}"""
+        if target_h in hcontent:
+            hcontent = hcontent.replace(target_h, repl_h, 1)
+            with open(host_path, "w", encoding="utf-8") as f:
+                f.write(hcontent)
+            print("Successfully patched clipboard/host.zig for Bionic pthread_tryjoin_np")
+
 if __name__ == "__main__":
     opentui_dir = sys.argv[1] if len(sys.argv) > 1 else "/tmp/opentui"
     patch_opentui(opentui_dir)
