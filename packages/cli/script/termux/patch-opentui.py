@@ -28,6 +28,49 @@ def patch_opentui(opentui_root):
     lib_arch = os.path.join(ndk_sysroot, "usr/lib/aarch64-linux-android").replace("\\", "/")
     lib_api24 = os.path.join(ndk_sysroot, "usr/lib/aarch64-linux-android/24").replace("\\", "/")
 
+    # Patch NDK headers to prevent host glibc leakage
+    limits_path = os.path.join(ndk_sysroot, "usr/include/limits.h")
+    if os.path.exists(limits_path):
+        with open(limits_path, "r", encoding="utf-8") as f:
+            lcontent = f.read()
+        if "__has_include_next(<limits.h>)" in lcontent:
+            repl = """0
+#ifndef CHAR_BIT
+#define CHAR_BIT 8
+#define SCHAR_MIN (-128)
+#define SCHAR_MAX 127
+#define UCHAR_MAX 255
+#define SHRT_MIN (-32768)
+#define SHRT_MAX 32767
+#define USHRT_MAX 65535
+#define INT_MIN (-2147483647-1)
+#define INT_MAX 2147483647
+#define UINT_MAX 4294967295U
+#define LONG_MIN (-9223372036854775807L-1L)
+#define LONG_MAX 9223372036854775807L
+#define ULONG_MAX 18446744073709551615UL
+#define LLONG_MIN (-9223372036854775807LL-1LL)
+#define LLONG_MAX 9223372036854775807LL
+#define ULLONG_MAX 18446744073709551615ULL
+#endif"""
+            lcontent = lcontent.replace("__has_include_next(<limits.h>)", repl)
+            with open(limits_path, "w", encoding="utf-8") as f:
+                f.write(lcontent)
+            print("Successfully patched NDK limits.h to isolate from host glibc")
+
+    cdefs_path = os.path.join(ndk_sysroot, "usr/include/sys/cdefs.h")
+    if os.path.exists(cdefs_path):
+        with open(cdefs_path, "r", encoding="utf-8") as f:
+            ccontent = f.read()
+        if "#error Unversioned target triples are not supported!" in ccontent:
+            ccontent = ccontent.replace(
+                "#error Unversioned target triples are not supported!",
+                "// #error Unversioned target triples are not supported!\n#ifndef __ANDROID_API__\n#define __ANDROID_API__ 24\n#endif\n#ifndef __ANDROID_MIN_SDK_VERSION__\n#define __ANDROID_MIN_SDK_VERSION__ 24\n#endif"
+            )
+            with open(cdefs_path, "w", encoding="utf-8") as f:
+                f.write(ccontent)
+            print("Successfully patched NDK sys/cdefs.h")
+
     # 1. Patch miniaudio_shim.c
     shim_path = os.path.join(opentui_root, "packages/native/src/miniaudio_shim.c")
     if os.path.exists(shim_path):
