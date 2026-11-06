@@ -375,11 +375,7 @@ cc_dir={lib_api24}
     }});
     if (is_android) {{
         shared.setLibCFile(.{{ .cwd_relative = "/tmp/android-libc.txt" }});
-        shared.addLibraryPath(.{{ .cwd_relative = "{lib_arch}" }});
-        shared.addLibraryPath(.{{ .cwd_relative = "{lib_api24}" }});
         static.setLibCFile(.{{ .cwd_relative = "/tmp/android-libc.txt" }});
-        static.addLibraryPath(.{{ .cwd_relative = "{lib_arch}" }});
-        static.addLibraryPath(.{{ .cwd_relative = "{lib_api24}" }});
     }}
     shared.installHeader(b.path("include/opentui.h"), "opentui.h");
     static.installHeader(b.path("include/opentui.h"), "opentui.h");
