@@ -41,6 +41,10 @@ def patch_opentui(opentui_root):
                 new_lines.append(f"sys_include_dir={include_arch}\n")
             elif line.startswith("crt_dir="):
                 new_lines.append(f"crt_dir={lib_api24}\n")
+            elif line.startswith("cc_dir="):
+                new_lines.append("cc_dir=\n")
+            elif line.startswith("gcc_dir="):
+                new_lines.append("gcc_dir=\n")
             else:
                 new_lines.append(line)
         with open(libc_path, "w", encoding="utf-8") as f:
