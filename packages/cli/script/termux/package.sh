@@ -16,29 +16,45 @@ cp -v "$ROOT_DIR/packages/cli/dist-node/opencode.mjs" "$DIST/lib/opencode.mjs"
 # 2. Copy staged assets from dist-node
 cp -r "$ROOT_DIR/packages/cli/dist-node/assets/"* "$DIST/lib/assets/"
 
-# 3. Inject Bionic Android libopentui.so
+# 3. Clean up non-Bionic / glibc native modules copied from dist-node
+rm -rf "$DIST/lib/assets/@parcel"
+rm -rf "$DIST/lib/assets/@ff-labs"
+rm -rf "$DIST/lib/assets/@yuuang"
+
+# 4. Inject Bionic Android libopentui.so
 if [ -f "$ROOT_DIR/.build-termux/opentui/libopentui.so" ]; then
   OTUI_DIR="$DIST/lib/assets/@opentui/core-linux-arm64"
   mkdir -p "$OTUI_DIR"
   cp -v "$ROOT_DIR/.build-termux/opentui/libopentui.so" "$OTUI_DIR/libopentui.so"
+else
+  echo "Error: libopentui.so not found in .build-termux/opentui!"
+  exit 1
 fi
 
-# 4. Inject Bionic Android pty.node
+# 5. Inject Bionic Android pty.node into all possible lookup locations
 if [ -f "$ROOT_DIR/.build-termux/pty-node/package/prebuilds/android-arm64/pty.node" ]; then
-  PTY_NODE_DIR="$DIST/lib/assets/@lydell/node-pty-linux-arm64/build/Release"
-  mkdir -p "$PTY_NODE_DIR" "$DIST/lib/assets/@lydell/node-pty-linux-arm64/prebuilds/android-arm64"
-  cp -v "$ROOT_DIR/.build-termux/pty-node/package/prebuilds/android-arm64/pty.node" "$PTY_NODE_DIR/pty.node"
-  cp -v "$ROOT_DIR/.build-termux/pty-node/package/prebuilds/android-arm64/pty.node" "$DIST/lib/assets/@lydell/node-pty-linux-arm64/prebuilds/android-arm64/pty.node"
+  PTY_BIONIC="$ROOT_DIR/.build-termux/pty-node/package/prebuilds/android-arm64/pty.node"
+  PTY_BASE="$DIST/lib/assets/@lydell/node-pty-linux-arm64"
+  mkdir -p "$PTY_BASE/build/Release" "$PTY_BASE/prebuilds/linux-arm64" "$PTY_BASE/prebuilds/android-arm64"
+  cp -v "$PTY_BIONIC" "$PTY_BASE/build/Release/pty.node"
+  cp -v "$PTY_BIONIC" "$PTY_BASE/prebuilds/linux-arm64/pty.node"
+  cp -v "$PTY_BIONIC" "$PTY_BASE/prebuilds/android-arm64/pty.node"
+else
+  echo "Error: Bionic pty.node not found in .build-termux/pty-node!"
+  exit 1
 fi
 
-# 5. Inject opencode-pty if compiled
+# 6. Inject opencode-pty if compiled, otherwise remove glibc copy
 if [ -f "$ROOT_DIR/.build-termux/pty/opencode-pty" ]; then
   mkdir -p "$DIST/lib/assets/opencode-pty"
   cp -v "$ROOT_DIR/.build-termux/pty/opencode-pty" "$DIST/lib/assets/opencode-pty/opencode-pty"
   chmod 755 "$DIST/lib/assets/opencode-pty/opencode-pty"
+else
+  echo "opencode-pty not compiled for Bionic; removing glibc copy and relying on Bionic node-pty"
+  rm -rf "$DIST/lib/assets/opencode-pty"
 fi
 
-# 6. Copy launcher and installer
+# 7. Copy launcher and installer
 cp -v "$ROOT_DIR/packages/cli/script/termux/launcher.sh" "$DIST/bin/opencode"
 chmod 755 "$DIST/bin/opencode"
 
@@ -46,7 +62,7 @@ cp -v "$ROOT_DIR/packages/cli/script/termux/install.sh" "$DIST/install.sh"
 chmod 755 "$DIST/install.sh"
 
 echo "=== Verifying ELF dependencies (NO glibc allowed) ==="
-for file in $(find "$DIST" -name "*.so" -o -name "*.node" -o -name "opencode-pty"); do
+for file in $(find "$DIST" -type f \( -name "*.so" -o -name "*.node" -o -name "opencode-pty" \)); do
   echo "--- $file ---"
   readelf -d "$file" | grep -E 'NEEDED|RUNPATH' || true
   if readelf -d "$file" | grep -i 'libc\.so\.6'; then

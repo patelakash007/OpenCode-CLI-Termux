@@ -66,19 +66,22 @@ jobs:
           echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang" >> "$GITHUB_ENV"
           echo "CC_aarch64_linux_android=$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang" >> "$GITHUB_ENV"
           echo "CXX_aarch64_linux_android=$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang++" >> "$GITHUB_ENV"
+          echo "AR_aarch64_linux_android=$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" >> "$GITHUB_ENV"
 
       - name: Clone OpenTUI and cross-compile libopentui.so
         run: |
           echo "=== Cloning OpenTUI v0.8.1 ==="
           git clone --depth 1 --branch v0.8.1 https://github.com/anomalyco/opentui.git /tmp/opentui
           cd /tmp/opentui/packages/native
+          echo "=== Preparing Zig dependencies ==="
+          sh scripts/prepare-zig-deps.sh
           echo "=== Building libopentui.so for aarch64-linux-android ==="
-          zig build -Doptimize=ReleaseFast -Dtarget=aarch64-linux-android
+          zig build -Doptimize=ReleaseFast -Dlibrary-target=aarch64-linux-android
           mkdir -p "$GITHUB_WORKSPACE/.build-termux/opentui"
-          FOUND_SO=$(find . -name "libopentui.so" | head -n 1)
+          FOUND_SO=$(find /tmp/opentui -name "libopentui.so" | head -n 1)
           if [ -z "$FOUND_SO" ]; then
-            echo "Error: libopentui.so not found in zig-out!"
-            find . -name "*.so"
+            echo "Error: libopentui.so not found in /tmp/opentui!"
+            find /tmp/opentui -name "*.so" || true
             exit 1
           fi
           cp -v "$FOUND_SO" "$GITHUB_WORKSPACE/.build-termux/opentui/libopentui.so"
