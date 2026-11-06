@@ -423,10 +423,9 @@ cc_dir={lib_api24}
         with open(host_path, "r", encoding="utf-8") as f:
             hcontent = f.read()
         target_h = 'extern "c" fn pthread_tryjoin_np(thread: std.Thread.Handle, result: ?*?*anyopaque) c_int;'
-        repl_h = """pub export fn pthread_tryjoin_np(thread: std.Thread.Handle, result: ?*?*anyopaque) callconv(.c) c_int {
-    _ = thread;
-    _ = result;
-    return 0;
+        repl_h = """extern "c" fn pthread_join(thread: std.Thread.Handle, retval: ?*?*anyopaque) c_int;
+pub export fn pthread_tryjoin_np(thread: std.Thread.Handle, result: ?*?*anyopaque) callconv(.c) c_int {
+    return pthread_join(thread, result);
 }"""
         if target_h in hcontent:
             hcontent = hcontent.replace(target_h, repl_h, 1)

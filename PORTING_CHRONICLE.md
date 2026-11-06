@@ -79,15 +79,14 @@ flowchart TD
   - *Why it was rejected*: Fragile! Every subshell, spawned process, and user command inherited `LD_PRELOAD`, occasionally breaking other Termux packages or subagents.
 - **The Named Fix (`Static In-Binary OpenTUI Stub`)**:
   - We created [`patch-opentui.py`](packages/cli/script/termux/patch-opentui.py).
-  - During the GitHub Actions build, before Zig compiles OpenTUI, the Python script injects a static C fallback directly into OpenTUI's C source:
-    ```c
-    #if defined(__ANDROID__)
-    #include <pthread.h>
-    int pthread_tryjoin_np(pthread_t thread, void **retval) {
-        return pthread_join(thread, retval);
+  - During the GitHub Actions build, before Zig compiles OpenTUI, the Python script injects a static fallback directly into OpenTUI's `clipboard/host.zig`:
+    ```zig
+    extern "c" fn pthread_join(thread: std.Thread.Handle, retval: ?*?*anyopaque) c_int;
+    pub export fn pthread_tryjoin_np(thread: std.Thread.Handle, result: ?*?*anyopaque) callconv(.c) c_int {
+        return pthread_join(thread, result);
     }
-    #endif
     ```
+  - The shim declares an extern `pthread_join` and delegates to it, matching glibc's contract. Earlier versions returned 0 unconditionally, which was incorrect and has been fixed.
   - The symbol is compiled directly into `libopentui.so`. When `node:ffi` loads the shared library, the dynamic linker resolves `pthread_tryjoin_np` internally. **Zero `LD_PRELOAD` required.**
 
 ---
