@@ -1,4 +1,4 @@
-name: Build Native Termux CLI
+name: build-termux
 
 on:
   push:
@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   build-termux:
-    name: Build Native Termux (aarch64-linux-android)
+    name: build-termux
     runs-on: ubuntu-24.04
     timeout-minutes: 60
 
@@ -29,7 +29,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
+        uses: ./.github/actions/setup-bun
         with:
           bun-version: 1.4.4
 
@@ -86,13 +86,11 @@ jobs:
           cd packages/process-daemon
           echo "OPENCODE_REAL_ZIG=$(command -v zig)" >> "$GITHUB_ENV"
           export OPENCODE_REAL_ZIG=$(command -v zig)
-          cargo build --release --target aarch64-linux-android || echo "opencode-pty build exited with code $?, checking target output..."
+          cargo build --release --target aarch64-linux-android || echo "opencode-pty build exited with code $?"
           mkdir -p "$GITHUB_WORKSPACE/.build-termux/pty"
           if [ -f target/aarch64-linux-android/release/opencode-pty ]; then
             cp -v target/aarch64-linux-android/release/opencode-pty "$GITHUB_WORKSPACE/.build-termux/pty/opencode-pty"
             readelf -d "$GITHUB_WORKSPACE/.build-termux/pty/opencode-pty"
-          else
-            echo "opencode-pty binary was not produced by cargo, will rely on pty.node"
           fi
 
       - name: Fetch native Termux pty.node
@@ -118,148 +116,9 @@ jobs:
           export OPENCODE_TARGET="android-arm64"
           bun run build:node --bundle-only --skip-install
 
-      - name: Assemble Termux Distribution Directory
+      - name: Package Distribution (tar.gz and .deb)
         run: |
-          echo "=== Assembling Termux Package Structure ==="
-          DIST="$GITHUB_WORKSPACE/dist-termux"
-          rm -rf "$DIST"
-          mkdir -p "$DIST/bin" "$DIST/lib/assets"
-
-          # 1. Copy bundled JS entrypoint
-          cp -v packages/cli/dist-node/opencode.mjs "$DIST/lib/opencode.mjs"
-
-          # 2. Copy staged assets from dist-node
-          cp -r packages/cli/dist-node/assets/* "$DIST/lib/assets/"
-
-          # 3. Inject Bionic Android libopentui.so
-          OTUI_DIR="$DIST/lib/assets/@opentui/core-linux-arm64"
-          mkdir -p "$OTUI_DIR"
-          cp -v "$GITHUB_WORKSPACE/.build-termux/opentui/libopentui.so" "$OTUI_DIR/libopentui.so"
-
-          # 4. Inject Bionic Android pty.node
-          PTY_NODE_DIR="$DIST/lib/assets/@lydell/node-pty-linux-arm64/build/Release"
-          mkdir -p "$PTY_NODE_DIR"
-          cp -v "$GITHUB_WORKSPACE/.build-termux/pty-node/package/prebuilds/android-arm64/pty.node" "$PTY_NODE_DIR/pty.node"
-          mkdir -p "$DIST/lib/assets/@lydell/node-pty-linux-arm64/prebuilds/android-arm64"
-          cp -v "$GITHUB_WORKSPACE/.build-termux/pty-node/package/prebuilds/android-arm64/pty.node" "$DIST/lib/assets/@lydell/node-pty-linux-arm64/prebuilds/android-arm64/pty.node"
-
-          # 5. Inject opencode-pty if compiled
-          if [ -f "$GITHUB_WORKSPACE/.build-termux/pty/opencode-pty" ]; then
-            mkdir -p "$DIST/lib/assets/opencode-pty"
-            cp -v "$GITHUB_WORKSPACE/.build-termux/pty/opencode-pty" "$DIST/lib/assets/opencode-pty/opencode-pty"
-            chmod 755 "$DIST/lib/assets/opencode-pty/opencode-pty"
-          fi
-
-          # 6. Create Termux Launcher Wrapper
-          cat << 'EOF' > "$DIST/bin/opencode"
-#!/data/data/com.termux/files/usr/bin/bash
-# OpenCode CLI native Termux launcher (Android Bionic, ARM64)
-
-PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
-SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || realpath "$0")")" && pwd)"
-
-if [ -d "$SCRIPT_DIR/../lib/assets" ]; then
-  LIB_DIR="$(cd "$SCRIPT_DIR/../lib" && pwd)"
-elif [ -d "$PREFIX/lib/opencode/assets" ]; then
-  LIB_DIR="$PREFIX/lib/opencode"
-else
-  echo "Error: Cannot locate OpenCode library assets directory." >&2
-  exit 1
-fi
-
-export OPENCODE_NODE_ASSETS_DIR="$LIB_DIR/assets"
-export OTUI_ASSET_ROOT="$LIB_DIR/assets"
-if [ -f "$LIB_DIR/assets/opencode-pty/opencode-pty" ]; then
-  export OPENCODE_PTY_BIN="$LIB_DIR/assets/opencode-pty/opencode-pty"
-fi
-
-NODE_BIN="$(command -v node 2>/dev/null)"
-if [ -z "$NODE_BIN" ]; then
-  echo "Error: Node.js is not found. Please install it with 'pkg install nodejs'." >&2
-  exit 1
-fi
-
-NODE_VER="$("$NODE_BIN" -v | sed 's/^v//' | cut -d. -f1)"
-if [ "$NODE_VER" -lt 26 ] 2>/dev/null; then
-  echo "Warning: OpenCode CLI requires Node 26+ for native FFI. Current version: $("$NODE_BIN" -v)" >&2
-  echo "Run 'pkg update && pkg install nodejs' in Termux to upgrade to Node 26." >&2
-fi
-
-exec "$NODE_BIN" --experimental-ffi --use-system-ca --disable-warning=ExperimentalWarning "$LIB_DIR/opencode.mjs" "$@"
-EOF
-          chmod 755 "$DIST/bin/opencode"
-
-          # 7. Create install.sh for easy installation
-          cat << 'EOF' > "$DIST/install.sh"
-#!/data/data/com.termux/files/usr/bin/bash
-set -e
-PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-
-echo "=== Installing OpenCode CLI to $PREFIX ==="
-mkdir -p "$PREFIX/bin" "$PREFIX/lib/opencode"
-
-cp -rf "$SCRIPT_DIR/lib/"* "$PREFIX/lib/opencode/"
-cp -f "$SCRIPT_DIR/bin/opencode" "$PREFIX/bin/opencode"
-chmod 755 "$PREFIX/bin/opencode"
-chmod -R 755 "$PREFIX/lib/opencode/assets" 2>/dev/null || true
-
-echo "OpenCode CLI installed successfully!"
-echo "Run 'opencode --help' or 'opencode' to start."
-EOF
-          chmod 755 "$DIST/install.sh"
-
-      - name: Verify dynamic linkage of all binaries
-        run: |
-          DIST="$GITHUB_WORKSPACE/dist-termux"
-          echo "=== Verifying ELF dependencies (NO glibc allowed) ==="
-          for file in $(find "$DIST" -name "*.so" -o -name "*.node" -o -name "opencode-pty"); do
-            echo "--- $file ---"
-            readelf -d "$file" | grep -E 'NEEDED|RUNPATH'
-            if readelf -d "$file" | grep -i 'libc\.so\.6'; then
-              echo "FATAL: glibc detected in $file!"
-              exit 1
-            fi
-          done
-          echo "All native libraries verified: Pure Android Bionic linkage!"
-
-      - name: Build .tar.gz and .deb packages
-        run: |
-          VERSION="2.2.5"
-          DIST="$GITHUB_WORKSPACE/dist-termux"
-          OUT="$GITHUB_WORKSPACE/release-artifacts"
-          mkdir -p "$OUT"
-
-          # 1. Tarball
-          echo "=== Creating tar.gz ==="
-          tar -czvf "$OUT/opencode-termux-aarch64.tar.gz" -C "$DIST" .
-
-          # 2. Debian Package
-          echo "=== Creating .deb ==="
-          DEB_DIR="/tmp/opencode-deb"
-          rm -rf "$DEB_DIR"
-          mkdir -p "$DEB_DIR/DEBIAN"
-          mkdir -p "$DEB_DIR/data/data/com.termux/files/usr/bin"
-          mkdir -p "$DEB_DIR/data/data/com.termux/files/usr/lib/opencode"
-
-          cp -r "$DIST/bin/opencode" "$DEB_DIR/data/data/com.termux/files/usr/bin/"
-          cp -r "$DIST/lib/"* "$DEB_DIR/data/data/com.termux/files/usr/lib/opencode/"
-          chmod 755 "$DEB_DIR/data/data/com.termux/files/usr/bin/opencode"
-
-          cat << EOF > "$DEB_DIR/DEBIAN/control"
-Package: opencode
-Version: ${VERSION}
-Architecture: aarch64
-Maintainer: patelakash007
-Depends: nodejs (>= 26.0.0)
-Section: utils
-Priority: optional
-Homepage: https://github.com/patelakash007/OpenCode-CLI
-Description: OpenCode AI CLI for native Termux (Bionic libc, ARM64, no PRoot)
-EOF
-
-          dpkg-deb --build --root-owner-group "$DEB_DIR" "$OUT/opencode_${VERSION}_aarch64.deb"
-          ls -la "$OUT"
+          bash packages/cli/script/termux/package.sh
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
