@@ -25,10 +25,15 @@ if [ -z "$NODE_BIN" ]; then
   exit 1
 fi
 
-NODE_VER="$("$NODE_BIN" -v | sed 's/^v//' | cut -d. -f1)"
-if [ "$NODE_VER" -lt 26 ] 2>/dev/null; then
-  echo "Warning: OpenCode CLI requires Node 26+ for native FFI. Current version: $("$NODE_BIN" -v)" >&2
-  echo "Run 'pkg update && pkg install nodejs' in Termux to upgrade to Node 26." >&2
+NODE_FLAGS=()
+if "$NODE_BIN" --help 2>&1 | grep -q -- '--experimental-ffi'; then
+  NODE_FLAGS+=("--experimental-ffi")
+fi
+if "$NODE_BIN" --help 2>&1 | grep -q -- '--use-system-ca'; then
+  NODE_FLAGS+=("--use-system-ca")
+fi
+if "$NODE_BIN" --help 2>&1 | grep -q -- '--disable-warning'; then
+  NODE_FLAGS+=("--disable-warning=ExperimentalWarning")
 fi
 
-exec "$NODE_BIN" --experimental-ffi --use-system-ca --disable-warning=ExperimentalWarning "$LIB_DIR/opencode.mjs" "$@"
+exec "$NODE_BIN" "${NODE_FLAGS[@]}" "$LIB_DIR/opencode.mjs" "$@"
