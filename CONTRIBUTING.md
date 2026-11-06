@@ -37,14 +37,7 @@ To test a development TUI against your installed OpenCode V2 background service 
 bun run dev:live [directory]
 ```
 
-For web development, run the backend and app in separate terminals. Other interfaces have root scripts:
-
-```bash
-bun dev serve --port 4096
-bun run dev:web
-bun run dev:desktop
-bun run dev:site
-```
+This is a CLI-only fork. Web and desktop packages were removed intentionally. See MAINTAINING.md for maintenance rules.
 
 ### Packages
 
@@ -55,8 +48,6 @@ bun run dev:site
 - `packages/client`: generated TypeScript clients
 - `packages/cli`: command-line entrypoint and service lifecycle
 - `packages/tui`: terminal interface
-- `packages/app`: shared web interface
-- `packages/desktop`: Electron desktop application
 - `packages/plugin`: plugin API
 
 ### Verification

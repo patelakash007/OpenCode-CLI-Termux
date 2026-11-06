@@ -94,7 +94,7 @@ Maintainer: patelakash007
 Depends: nodejs (>= 20.0.0) | nodejs-lts (>= 20.0.0)
 Section: utils
 Priority: optional
-Homepage: https://github.com/patelakash007/OpenCode-CLI
+Homepage: https://github.com/patelakash007/OpenCode-CLI-Termux
 Description: OpenCode AI CLI for native Termux (Bionic libc, ARM64, no PRoot)
 EOF
 
