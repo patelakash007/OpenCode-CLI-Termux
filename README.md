@@ -20,19 +20,31 @@
 
 ## Install
 
-Download the latest release assets from [Releases](https://github.com/patelakash007/OpenCode-CLI-Termux/releases):
-
-### Option A: Install via Debian Package (Recommended)
+### One-Line Install (Recommended)
+Paste this single command into Termux:
 ```bash
-dpkg -i opencode_2.2.5_aarch64.deb
+curl -fsSL https://raw.githubusercontent.com/patelakash007/OpenCode-CLI-Termux/main/install.sh | bash
 ```
 
-### Option B: Standalone Tarball
-```bash
-tar -xzf opencode-termux-aarch64.tar.gz
-cd opencode-termux-aarch64
-bash install.sh
-```
+> [!IMPORTANT]
+> **How to Update**:
+> To update, re-run the `install.sh` command. Do not use `opencode upgrade` — it fetches upstream, not this repo.
+
+---
+
+### Manual Download
+You can also download the assets manually from [Releases](https://github.com/patelakash007/OpenCode-CLI-Termux/releases):
+
+- **Debian Package**:
+  ```bash
+  dpkg -i opencode_2.2.5_aarch64.deb
+  ```
+- **Standalone Tarball**:
+  ```bash
+  tar -xzf opencode-termux-aarch64.tar.gz
+  cd opencode-termux-aarch64
+  bash install.sh
+  ```
 
 ---
 
