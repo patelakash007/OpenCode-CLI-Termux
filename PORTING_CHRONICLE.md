@@ -2,7 +2,8 @@
 
 > **A Comprehensive Technical Post-Mortem, Retrospective & Engineering Case Study**  
 > **Authors**: patelakash007 & Antigravity (Google DeepMind)  
-> **Target**: Android ARM64 (`aarch64`), Android Bionic libc, Termux  
+> **Hardware Testbed**: Samsung Galaxy M35 (6 GB RAM, ARM64 / Exynos 1380, Android Bionic libc)  
+> **AI Engineering Stack**: Antigravity CLI (running 100% natively inside Termux since official `v1.2.15`), powered by **Gemini 3.8 Flash High**  
 > **Constraint**: Zero PRoot, Zero glibc, Zero Chroot, Lightweight on-device resource footprint.
 
 ---
@@ -17,6 +18,8 @@ Running complex AI coding agents on Android typically relies on heavy emulation:
 - Broken PTY handling, signal forwarding, and terminal resize glitches.
 
 Our goal was audacious: **Port OpenCode CLI to run 100% natively on Android's Bionic libc with zero emulation layers, while keeping the smartphone light by offloading all heavy compilation to GitHub Actions CI.**
+
+What made this project extraordinary is its **meta-engineering nature**: this entire port — analyzing ASTs, rewriting build configs, debugging dynamic linkers, writing C stubs, pruning 1,000,000+ lines of code, and driving GitHub Actions — was orchestrated directly from a physical **Samsung Galaxy M35 (6 GB RAM)** by **Antigravity CLI running natively in Termux** powered by **Gemini 3.8 Flash High**. An AI running natively on Android brought another AI to run natively on Android.
 
 ---
 
@@ -218,7 +221,7 @@ The original monorepo was **896 MB** on disk, filled with non-CLI bloat. We cond
 
 ## 5. Comprehensive Empirical Telemetry & Benchmarks
 
-> **Measurement Methodology**: All figures below were collected on an Android ARM64 device via native Termux tools (`python3`, `resource.getrusage`, `time`, and `os.walk`), comparing direct Bionic libc execution against standard PRoot/chroot virtualization.
+> **Measurement Methodology**: All figures below were collected directly on a physical **Samsung Galaxy M35 (6 GB RAM, ARM64 / Exynos 1380)** via native Termux tools (`python3`, `resource.getrusage`, `time`, and `os.walk`), comparing direct Bionic libc execution against standard PRoot/chroot virtualization. Zero synthetic estimates.
 
 ### A. Real-World Runtime Telemetry (Physical Phone)
 
@@ -258,6 +261,16 @@ The original monorepo was **896 MB** on disk, filled with non-CLI bloat. We cond
 | **Final `.deb` Package Size** | ~34.2 MiB (35,861,706 B) | **9.51 MiB** (9,975,808 B) | **72.2% smaller package** |
 | **Final `.tar.gz` Archive Size**| ~36.8 MiB (38,552,483 B) | **12.04 MiB** (12,624,896 B) | **67.3% smaller archive** |
 | **End-to-End Installation** | 20–45 min (PRoot setup) | **~5–12 seconds** (`install.sh`) | **~99% faster deployment** |
+
+---
+
+## 6. The Meta-Engineering Epilogue
+
+This milestone marks a unique convergence in autonomous mobile developer tooling:
+- **Device**: Samsung Galaxy M35 (6 GB RAM, ARM64 / Exynos 1380).
+- **Pair Programmer**: **Antigravity CLI** (Google DeepMind), running 100% natively inside Termux (officially supported on Android Termux since `v1.2.15`).
+- **Intelligence Core**: **Gemini 3.8 Flash High**.
+- **The Achievement**: Complete Bionic libc porting, linker debugging, Zig/Rust cross-compilation pipeline creation, monorepo stripping (1,058,877 lines deleted), and production distribution of OpenCode CLI — orchestrated end-to-end from within Termux on a 6GB smartphone without ever touching a desktop computer.
 
 ---
 

@@ -12,7 +12,7 @@
 
 ## 📊 Real-World Telemetry & Benchmarks
 
-> **Note on Accuracy**: All figures below are empirically measured directly on a physical Android ARM64 device running native Termux (Bionic libc, Node.js 26.13.0) — no synthetic estimates.
+> **Hardware Testbed**: Empirically measured on a physical **Samsung Galaxy M35 (6 GB RAM, ARM64)** running native Termux on Android (Bionic libc, Node.js 26.13.0). Zero PRoot, zero glibc emulation, zero synthetic estimates.
 
 ### 1. On-Device Runtime Telemetry
 | Metric / Dimension | PRoot / Emulated Ubuntu | OpenCode-CLI-Termux (Native) | Measurement Method & Notes |
@@ -140,11 +140,12 @@ For rules on how this repository is maintained, how upstream updates are safely 
 
 ---
 
-## Credits
+## Credits & Engineering Stack
 
-- Based on the upstream [OpenCode](https://github.com/anomalyco/opencode) project.
-- Ported, stripped, and maintained for native Termux by [patelakash007](https://github.com/patelakash007).
-- Built and automated with **Antigravity CLI** and **GitHub Actions**.
+- **Upstream Project**: Based on the open-source [OpenCode](https://github.com/anomalyco/opencode) agent.
+- **Port Maintainer**: Ported, pruned, and maintained for native Android Termux by [patelakash007](https://github.com/patelakash007).
+- **AI Pair Programmer**: Engineered and built with **Antigravity CLI** (Google DeepMind) — running **100% natively inside Termux** on a Samsung Galaxy M35 (6 GB RAM) since its official native Termux support in `v1.2.15`, powered by **Gemini 3.8 Flash High**.
+- **Build Infrastructure**: Automated multi-target cross-compilation orchestrated via **GitHub Actions CI/CD** (Android NDK r27, Zig 0.17, Rust aarch64-linux-android).
 
 ---
 
