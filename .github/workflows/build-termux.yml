@@ -75,8 +75,10 @@ jobs:
           cd /tmp/opentui/packages/native
           echo "=== Preparing Zig dependencies ==="
           sh scripts/prepare-zig-deps.sh
+          echo "=== Patching OpenTUI for Android Bionic ==="
+          python3 "$GITHUB_WORKSPACE/packages/cli/script/termux/patch-opentui.py" /tmp/opentui
           echo "=== Building libopentui.so for aarch64-linux-android ==="
-          zig build -Doptimize=ReleaseFast -Dlibrary-target=aarch64-linux-android
+          zig build -Doptimize=ReleaseFast -Dtarget=aarch64-linux-android -Dlibrary-target=aarch64-linux-android
           mkdir -p "$GITHUB_WORKSPACE/.build-termux/opentui"
           FOUND_SO=$(find /tmp/opentui -name "libopentui.so" | head -n 1)
           if [ -z "$FOUND_SO" ]; then
