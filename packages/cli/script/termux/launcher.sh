@@ -25,11 +25,6 @@ if [ -z "$NODE_BIN" ]; then
   exit 1
 fi
 
-if [ -f "$LIB_DIR/libpthread_shim.so" ]; then
-  export LD_PRELOAD="${LD_PRELOAD:+$LD_PRELOAD:}$LIB_DIR/libpthread_shim.so"
-elif [ -f "$PREFIX/lib/libpthread_shim.so" ]; then
-  export LD_PRELOAD="${LD_PRELOAD:+$LD_PRELOAD:}$PREFIX/lib/libpthread_shim.so"
-fi
 
 NODE_FLAGS=()
 if "$NODE_BIN" --help 2>&1 | grep -q -- '--experimental-ffi'; then
