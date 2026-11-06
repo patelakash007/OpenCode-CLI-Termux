@@ -1,4 +1,5 @@
 import { $ } from "bun"
+import { existsSync } from "node:fs"
 import path from "node:path"
 import { promisify } from "node:util"
 import { brotliCompress, constants } from "node:zlib"
@@ -8,6 +9,7 @@ import { collectFiles } from "./files"
 export async function buildAppArchive(channel: string, version: string, options?: { skipBuild?: boolean }) {
   if (options?.skipBuild) return AppArchive.encode([])
   const root = path.resolve(import.meta.dirname, "../../app")
+  if (!existsSync(root)) return AppArchive.encode([])
   await $`bun run build`.cwd(root).env({
     ...process.env,
     OPENCODE_CHANNEL: channel,
