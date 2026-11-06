@@ -20,8 +20,26 @@ permissions:
   contents: write
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install linters
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+          pip install yamllint
+          curl -sSL https://github.com/rhysd/actionlint/releases/latest/download/actionlint_linux_amd64.tar.gz | tar xz
+          sudo mv actionlint /usr/local/bin/
+      - name: Run linters
+        run: |
+          shellcheck install.sh packages/cli/script/termux/package.sh
+          yamllint .github/workflows/*.yml
+          actionlint .github/workflows/*.yml
+
   build-termux:
     name: build-termux
+    needs: [lint]
     runs-on: ubuntu-24.04
     timeout-minutes: 60
 
